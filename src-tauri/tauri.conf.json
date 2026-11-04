@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DOMINION",
   "version": "0.2.9",
-  "identifier": "com.hushmind.dominion",
+  "identifier": "com.hushmind.dominion.tauri",
   "build": {
     "frontendDist": "../dist"
   },

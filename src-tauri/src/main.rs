@@ -61,6 +61,15 @@ fn main() {
             .center()
             .build()?;
             let _ = win.set_focus();
+            // Some macOS sessions apply a stale frame after creation; reapply once loaded.
+            let reapply = win.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(1500));
+                let _ = reapply.set_size(tauri::LogicalSize::new(1291.0, 850.0));
+                let _ = reapply.center();
+                let _ = reapply.show();
+                let _ = reapply.set_focus();
+            });
             Ok(())
         })
         .on_window_event(|window, event| {

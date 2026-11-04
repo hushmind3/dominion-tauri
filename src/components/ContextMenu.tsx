@@ -1,51 +1,69 @@
 import { useEffect, useState } from "react";
 
-type Pos = { x: number; y: number; text: string; editable: boolean } | null;
+type Ctx = {
+  x: number;
+  y: number;
+  text: string;
+  editable: boolean;
+  link: string;
+  code: string;
+  message: string;
+};
 
 export function ContextMenu() {
-  const [pos, setPos] = useState<Pos>(null);
+  const [ctx, setCtx] = useState<Ctx | null>(null);
 
   useEffect(() => {
     const onContext = (event: MouseEvent) => {
       event.preventDefault();
       const target = event.target as HTMLElement | null;
+      if (!target) return;
       const editable = Boolean(
-        target &&
-          (target.tagName === "INPUT" ||
-            target.tagName === "TEXTAREA" ||
-            target.isContentEditable),
+        target.closest("input, textarea, [contenteditable='true']"),
       );
       const selection = String(window.getSelection?.() || "").trim();
-      setPos({ x: event.clientX, y: event.clientY, text: selection, editable });
+      const anchor = target.closest("a") as HTMLAnchorElement | null;
+      const pre = target.closest("pre") as HTMLElement | null;
+      const msg = target.closest("[data-message]") as HTMLElement | null;
+      setCtx({
+        x: event.clientX,
+        y: event.clientY,
+        text: selection,
+        editable,
+        link: anchor?.href || "",
+        code: pre?.innerText || "",
+        message: msg?.innerText || "",
+      });
     };
-    const close = () => setPos(null);
+    const close = () => setCtx(null);
     window.addEventListener("contextmenu", onContext);
     window.addEventListener("click", close);
     window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
     return () => {
       window.removeEventListener("contextmenu", onContext);
       window.removeEventListener("click", close);
       window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
     };
   }, []);
 
-  if (!pos) return null;
+  if (!ctx) return null;
 
-  const copy = async () => {
-    const text = pos.text || "";
-    if (!text) return;
+  const write = async (value: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(value);
     } catch {
       const area = document.createElement("textarea");
-      area.value = text;
+      area.value = value;
       document.body.appendChild(area);
       area.select();
       document.execCommand("copy");
       area.remove();
     }
-    setPos(null);
+    setCtx(null);
   };
+
   const paste = async () => {
     try {
       const text = await navigator.clipboard.readText();
@@ -53,67 +71,68 @@ export function ContextMenu() {
       if (el && "value" in el) {
         const start = el.selectionStart ?? el.value.length;
         const end = el.selectionEnd ?? start;
-        el.value = el.value.slice(0, start) + text + el.value.slice(end);
+        const setter = Object.getOwnPropertyDescriptor(
+          el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        setter?.call(el, el.value.slice(0, start) + text + el.value.slice(end));
         el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.selectionStart = el.selectionEnd = start + text.length;
       }
     } catch {
-      /* clipboard read not permitted in this webview */
+      /* webview may block clipboard reads */
     }
-    setPos(null);
+    setCtx(null);
   };
+
   const open = (url: string) => {
     window.open(url, "_blank", "noopener");
-    setPos(null);
+    setCtx(null);
   };
 
   const item =
     "block w-full whitespace-nowrap rounded-md px-3 py-1.5 text-left text-[12px] text-[#3A342D] hover:bg-[#F7F2EA]";
 
+  const rows: Array<{ label: string; run: () => void }> = [];
+  if (ctx.editable) rows.push({ label: "붙여넣기", run: () => void paste() });
+  if (ctx.text) {
+    rows.push({ label: "복사", run: () => void write(ctx.text) });
+    rows.push({
+      label: "Google로 번역",
+      run: () =>
+        open("https://translate.google.com/?sl=auto&tl=ko&text=" + encodeURIComponent(ctx.text.slice(0, 1800))),
+    });
+    rows.push({
+      label: "검색",
+      run: () => open("https://www.google.com/search?q=" + encodeURIComponent(ctx.text.slice(0, 400))),
+    });
+  }
+  if (!ctx.text) {
+    if (ctx.code) rows.push({ label: "코드 복사", run: () => void write(ctx.code) });
+    if (ctx.message) rows.push({ label: "메시지 전체 복사", run: () => void write(ctx.message) });
+    if (ctx.link) {
+      rows.push({ label: "링크 열기", run: () => open(ctx.link) });
+      rows.push({ label: "링크 주소 복사", run: () => void write(ctx.link) });
+    }
+  }
+  rows.push({ label: "새로고침", run: () => window.location.reload() });
+
   return (
     <div
-      className="fixed z-[9999] min-w-[160px] rounded-xl border border-[#E7E0D5] bg-white p-1 shadow-xl"
-      style={{ left: Math.min(pos.x, window.innerWidth - 180), top: Math.min(pos.y, window.innerHeight - 180) }}
+      className="fixed z-[9999] min-w-[170px] rounded-xl border border-[#E7E0D5] bg-white p-1 text-[#3A342D] shadow-xl"
+      style={{
+        left: Math.min(ctx.x, window.innerWidth - 200),
+        top: Math.min(ctx.y, window.innerHeight - 40 - rows.length * 30),
+      }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
     >
-      {pos.editable && (
-        <button type="button" className={item} onClick={() => void paste()}>
-          붙여넣기
+      {rows.map((row) => (
+        <button key={row.label} type="button" className={item} onClick={row.run}>
+          {row.label}
         </button>
-      )}
-      {!pos.editable && !pos.text && (
-        <button type="button" className={item} onClick={() => { window.location.reload(); }}>
-          새로고침
-        </button>
-      )}
-      {pos.text && (
-        <>
-          <button type="button" className={item} onClick={() => void copy()}>
-            복사
-          </button>
-          <button
-            type="button"
-            className={item}
-            onClick={() =>
-              open(
-                "https://translate.google.com/?sl=auto&tl=ko&text=" +
-                  encodeURIComponent(pos.text.slice(0, 1800)),
-              )
-            }
-          >
-            Google로 번역
-          </button>
-          <button
-            type="button"
-            className={item}
-            onClick={() =>
-              open("https://www.google.com/search?q=" + encodeURIComponent(pos.text.slice(0, 400)))
-            }
-          >
-            검색
-          </button>
-        </>
-      )}
+      ))}
     </div>
   );
 }

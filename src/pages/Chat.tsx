@@ -325,7 +325,7 @@ export function ChatPage({sessionId,onSession,openModels}:{sessionId?:string;onS
 }
 function Message({message,agentName,showReasoning}:{message:ChatMessage;agentName?:string;showReasoning?:boolean}){
  const [open,setOpen]=useState(true);const human=message.role==='user';
- return <div className={'flex min-w-0 items-start gap-3 '+(human?'':'')}>
+ return <div className={'flex min-w-0 items-start gap-3 '+(human?'':'')} data-message>
   <div className={'grid size-9 shrink-0 place-items-center rounded-xl '+(human?'bg-[#E9E2D7] text-[#4A443C]':'bg-[#F7E8E1] text-[#A94E30]')}>{human?'U':<Sparkles size={17}/>}</div>
   <div className="relative min-w-0 flex-1">
    <div className="mb-2 flex items-center gap-2 text-xs font-bold text-[#4A443C]">{human?'You':agentName||'DOMINION'}</div>
