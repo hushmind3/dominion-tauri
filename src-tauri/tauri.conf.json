@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DOMINION",
+  "version": "0.2.9",
+  "identifier": "com.hushmind.dominion",
+  "build": { "frontendDist": "../dist" },
+  "app": {
+    "windows": [{ "title": "DOMINION", "width": 1291, "height": 850, "minWidth": 740, "minHeight": 600 }],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": true, "targets": ["dmg"], "icon": [] }
+}

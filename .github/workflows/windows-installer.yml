@@ -1,0 +1,21 @@
+name: Windows real llama.cpp install
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/runner-installer.mjs'
+      - 'server/local-runner.mjs'
+      - 'tests/windows-installer.test.mjs'
+      - '.github/workflows/windows-installer.yml'
+  workflow_dispatch:
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.12.0'
+      - name: Download and verify real official llama-server for Windows
+        run: node --test tests/windows-installer.test.mjs

@@ -1,0 +1,63 @@
+appId: com.hushmind.dominion
+productName: DOMINION
+copyright: Copyright © 2026 hushmind3
+
+directories:
+  output: release
+  buildResources: build
+
+# The gateway is a real Node process launched by Electron with ELECTRON_RUN_AS_NODE.
+# Keeping asar disabled lets that process resolve server files and node_modules
+# exactly like the development layout.
+asar: false
+npmRebuild: false
+electronVersion: 45.2.1
+compression: normal
+
+files:
+  - dist/**/*
+  - server/**/*
+  - shared/**/*
+  - desktop/main.cjs
+  - desktop/preload.cjs
+  - package.json
+  - node_modules/**/*
+  - '!node_modules/.bin/**'
+  - '!node_modules/**/{test,tests,__tests__,example,examples,docs}/**'
+  - '!**/*.map'
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  icon: build/icon.png
+
+nsis:
+  artifactName: DOMINION-Setup.${ext}
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: DOMINION
+  deleteAppDataOnUninstall: false
+
+portable:
+  artifactName: DOMINION-Portable.${ext}
+  requestExecutionLevel: user
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  category: public.app-category.productivity
+  icon: build/icon.png
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+
+dmg:
+  title: DOMINION ${version}
+  artifactName: DOMINION-${version}-${arch}.${ext}

@@ -1,0 +1,29 @@
+name: DOMINION quality gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.12.0'
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Visual browser smoke (13 pages + mobile)
+        run: npm run test:ui
+        env:
+          DOMINION_SCREENSHOT_DIR: runtime/screenshots
+      - name: Save UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dominion-ui-screenshots
+          path: runtime/screenshots
+          if-no-files-found: ignore

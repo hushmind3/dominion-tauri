@@ -1,0 +1,14 @@
+{
+  "name": "dominion-desktop",
+  "version": "0.2.9",
+  "private": true,
+  "description": "DOMINION desktop host ??launches the independent Node gateway",
+  "main": "main.cjs",
+  "scripts": {
+    "prestart": "npm --prefix .. run build",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^45.2.1"
+  }
+}
