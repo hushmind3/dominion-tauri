@@ -12,10 +12,14 @@ type Ctx = {
 
 type Item = { label: string; run?: () => void; disabled?: boolean } | "sep";
 
+const isDesktopHost = () =>
+  Boolean((window as any).__TAURI_INTERNALS__ || (window as any).dominionDesktop);
+
 export function ContextMenu() {
   const [ctx, setCtx] = useState<Ctx | null>(null);
 
   useEffect(() => {
+    if (!isDesktopHost()) return;
     const onContext = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
