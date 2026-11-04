@@ -3,10 +3,39 @@
   "productName": "DOMINION",
   "version": "0.2.9",
   "identifier": "com.hushmind.dominion",
-  "build": { "frontendDist": "../dist" },
-  "app": {
-    "windows": [{ "title": "DOMINION", "width": 1291, "height": 850, "minWidth": 740, "minHeight": 600 }],
-    "security": { "csp": null }
+  "build": {
+    "frontendDist": "../dist"
   },
-  "bundle": { "active": true, "targets": ["dmg"], "icon": [] }
+  "app": {
+    "windows": [
+      {
+        "title": "DOMINION",
+        "width": 1291,
+        "height": 850,
+        "minWidth": 740,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../server/": "server/",
+      "../shared/": "shared/",
+      "../package.json": "package.json"
+    }
+  }
 }

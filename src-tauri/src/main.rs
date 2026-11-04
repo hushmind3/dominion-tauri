@@ -13,18 +13,27 @@ fn free_port() -> u16 {
         .unwrap_or(4317)
 }
 
+fn server_root(app: &tauri::AppHandle) -> std::path::PathBuf {
+    if let Ok(res) = app.path().resource_dir() {
+        if res.join("server/index.mjs").exists() { return res; }
+    }
+    std::env::current_dir().unwrap_or_else(|_| ".".into())
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
+            let root = server_root(app.handle());
             let data = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
             std::fs::create_dir_all(&data).ok();
             let port = free_port();
             let node = std::env::var("DOMINION_NODE").unwrap_or_else(|_| "node".into());
             let child = Command::new(node)
-                .arg("server/index.mjs")
+                .arg(root.join("server/index.mjs"))
                 .env("DOMINION_PORT", port.to_string())
                 .env("DOMINION_HOST", "127.0.0.1")
                 .env("DOMINION_DATA", data.join("runtime"))
+                .current_dir(root.clone())
                 .spawn()
                 .ok();
             app.manage(Sidecar(Mutex::new(child)));
