@@ -7,6 +7,7 @@ export function ContextMenu() {
 
   useEffect(() => {
     const onContext = (event: MouseEvent) => {
+      event.preventDefault();
       const target = event.target as HTMLElement | null;
       const editable = Boolean(
         target &&
