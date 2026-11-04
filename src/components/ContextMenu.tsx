@@ -90,60 +90,6 @@ export function ContextMenu() {
     setCtx(null);
   };
 
-  const pageState = (window as any).__dominionPageKo as Map<Text, string> | undefined;
-
-  const translatePage = async () => {
-    const root = document.querySelector("main") || document.body;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        const text = node.nodeValue?.trim() || "";
-        if (text.length < 2) return NodeFilter.FILTER_REJECT;
-        const parent = node.parentElement;
-        if (!parent) return NodeFilter.FILTER_REJECT;
-        if (["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT"].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
-        if (/^[\d\s.,:/-]+$/.test(text)) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    });
-    const nodes: Text[] = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode as Text);
-    const original = new Map<Text, string>();
-    for (const node of nodes.slice(0, 120)) original.set(node, node.nodeValue || "");
-    (window as any).__dominionPageKo = original;
-    const translate = async (text: string) => {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      const data = await res.json().catch(() => ({}));
-      return String(data.text || "");
-    };
-    let index = 0;
-    const worker = async () => {
-      while (index < nodes.length) {
-        const node = nodes[index++];
-        const value = node.nodeValue || "";
-        try {
-          const translated = await translate(value);
-          if (translated) node.nodeValue = translated;
-        } catch {
-          /* keep original */
-        }
-      }
-    };
-    await Promise.all([worker(), worker(), worker()]);
-    setCtx(null);
-  };
-
-  const restorePage = () => {
-    const map = (window as any).__dominionPageKo as Map<Text, string> | undefined;
-    if (!map) return;
-    for (const [node, value] of map) node.nodeValue = value;
-    (window as any).__dominionPageKo = undefined;
-    setCtx(null);
-  };
-
   const rows: Item[] = [];
 
   if (window.history.length > 1) {
@@ -184,11 +130,6 @@ export function ContextMenu() {
   }
 
   rows.push("sep");
-  if (pageState) {
-    rows.push({ label: "원문 복원", run: restorePage });
-  } else {
-    rows.push({ label: "페이지 번역 (한국어)", run: () => void translatePage() });
-  }
   rows.push({ label: "인쇄", run: () => { window.print(); setCtx(null); } });
 
   const item =
