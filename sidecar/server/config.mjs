@@ -1,0 +1,13 @@
+import path from 'node:path';
+import fs from 'node:fs';
+if (fs.existsSync('.env') && typeof process.loadEnvFile==='function') process.loadEnvFile('.env');
+export const ROOT = path.resolve(process.cwd());
+export const DATA = path.resolve(process.env.DOMINION_DATA || path.join(ROOT,'runtime'));
+export const WORKSPACE = path.resolve(process.env.DOMINION_WORKSPACE || path.join(ROOT,'workspace'));
+export const PORT = Number(process.env.DOMINION_PORT || 4317);
+export const HOST = process.env.DOMINION_HOST || '127.0.0.1';
+export const ADMIN_TOKEN = process.env.DOMINION_ADMIN_TOKEN || '';
+export const IS_LOCAL = ['127.0.0.1','::1','localhost'].includes(HOST);
+if (!IS_LOCAL && ADMIN_TOKEN.length < 24) throw Error('Remote binding requires DOMINION_ADMIN_TOKEN >= 24 characters');
+for (const p of [DATA,WORKSPACE]) fs.mkdirSync(p,{recursive:true,mode:0o700});
+export const uid = () => crypto.randomUUID();

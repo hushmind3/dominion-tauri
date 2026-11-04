@@ -2,7 +2,7 @@
 
 use std::process::{Child, Command};
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{webview::WebviewWindowBuilder, Manager, WebviewUrl};
 
 struct Sidecar(Mutex<Option<Child>>);
 
@@ -15,7 +15,7 @@ fn free_port() -> u16 {
 
 fn server_root(app: &tauri::AppHandle) -> std::path::PathBuf {
     if let Ok(res) = app.path().resource_dir() {
-        if res.join("server/index.mjs").exists() { return res; }
+        if res.join("sidecar/server/index.mjs").exists() { return res.join("sidecar"); }
     }
     std::env::current_dir().unwrap_or_else(|_| ".".into())
 }
@@ -38,9 +38,29 @@ fn main() {
                 .ok();
             app.manage(Sidecar(Mutex::new(child)));
             let url = format!("http://127.0.0.1:{}/", port);
-            if let Some(win) = app.get_webview_window("main") {
-                let _ = win.navigate(url.parse().unwrap());
+            let addr = format!("127.0.0.1:{}", port);
+            for _ in 0..150 {
+                if std::net::TcpStream::connect_timeout(
+                    &addr.parse().unwrap(),
+                    std::time::Duration::from_millis(200),
+                )
+                .is_ok()
+                {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(200));
             }
+            let win = WebviewWindowBuilder::new(
+                app,
+                "main",
+                WebviewUrl::External(url.parse().unwrap()),
+            )
+            .title("DOMINION")
+            .inner_size(1291.0, 850.0)
+            .min_inner_size(740.0, 600.0)
+            .center()
+            .build()?;
+            let _ = win.set_focus();
             Ok(())
         })
         .on_window_event(|window, event| {

@@ -7,15 +7,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "DOMINION",
-        "width": 1291,
-        "height": 850,
-        "minWidth": 740,
-        "minHeight": 600
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }
@@ -33,9 +25,7 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../server/": "server/",
-      "../shared/": "shared/",
-      "../package.json": "package.json"
+      "../sidecar/": "sidecar/"
     }
   }
 }
