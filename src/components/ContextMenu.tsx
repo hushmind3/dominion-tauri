@@ -129,11 +129,6 @@ export function ContextMenu() {
     rows.push({ label: "링크 주소 복사", run: () => void write(ctx.link) });
   }
 
-  rows.push({
-    label: "이 페이지 번역",
-    run: () =>
-      open("https://translate.google.com/translate?sl=auto&tl=ko&u=" + encodeURIComponent(location.href)),
-  });
   rows.push("sep");
   rows.push({ label: "인쇄", run: () => { window.print(); setCtx(null); } });
 
